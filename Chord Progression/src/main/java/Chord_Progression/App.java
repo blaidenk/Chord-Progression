@@ -24,6 +24,7 @@ public final class App {
         JLabel numberLabel = new JLabel("Number of chords:");
         JTextField keyText = new JTextField(15);
         JTextField numberText = new JTextField(15);
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         GridBagConstraints right = new GridBagConstraints();
         right.anchor = GridBagConstraints.WEST;
@@ -51,9 +52,20 @@ public final class App {
             public void actionPerformed(ActionEvent e) {
                 String key = keyText.getText();
                 int chordCount = Integer.parseInt(numberText.getText());
-
-                for (int i = 0; i < chordCount; i++) {
-                    showChords.setText(numberText.getText());
+                showChords.setText(chords(chordCount, key).toString());
+                Synthesizer synth;
+                try {
+                    synth = MidiSystem.getSynthesizer();
+                    synth.open();
+                    channels = synth.getChannels();
+                    for (int j = 1; j < chordCount; j++) {
+                        for (int k = 0; k < 3; k++) {
+                            play(chordToNote(chords(chordCount, key).get(j)).get(k), 300);
+                        }
+                    }
+                    synth.close();
+                } catch (MidiUnavailableException | InterruptedException e1) {
+                    e1.printStackTrace();
                 }
             }
         });
@@ -302,5 +314,65 @@ public final class App {
             return chordList;
         } else
             return chordList;
+    }
+
+    private static void play(String note, int duration) throws InterruptedException {
+
+        channels[INSTRUMENT].noteOn(id(note), VOLUME);
+
+        Thread.sleep(duration);
+
+        channels[INSTRUMENT].noteOff(id(note));
+    }
+
+    private static void rest(int duration) throws InterruptedException {
+        Thread.sleep(duration);
+    }
+
+    private static int id(String note) {
+        int octave = Integer.parseInt(note.substring(0, 1));
+        return keys.indexOf(note.substring(1)) + 12 * octave + 12;
+    }
+
+    static List<String> chordToNote(String chord) {
+
+        List<String> notes = new ArrayList<String>();
+        if (chord.equalsIgnoreCase("C")) {
+            notes.add("6C");
+            notes.add("6E");
+            notes.add("6G");
+            return notes;
+        }
+        if (chord.equalsIgnoreCase("Dm")) {
+            notes.add("6D");
+            notes.add("6F");
+            notes.add("6A");
+            return notes;
+        }
+        if (chord.equalsIgnoreCase("Em")) {
+            notes.add("6E");
+            notes.add("6G");
+            notes.add("6B");
+            return notes;
+        }
+        if (chord.equalsIgnoreCase("F")) {
+            notes.add("6F");
+            notes.add("6A");
+            notes.add("6G");
+            return notes;
+        }
+        if (chord.equalsIgnoreCase("G")) {
+            notes.add("6G");
+            notes.add("6B");
+            notes.add("6D");
+            return notes;
+        }
+        if (chord.equalsIgnoreCase("Am")) {
+            notes.add("6A");
+            notes.add("6C");
+            notes.add("6E");
+            return notes;
+        } else
+            return notes;
     }
 }
